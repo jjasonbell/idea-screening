@@ -148,9 +148,30 @@ get_model <- function(X, newx, contest_vec, y_train,
         names(a)[1] <- "coefs"
         a <- a[a$coefs != 0, ]
         a <- a[order(abs(a$coefs), decreasing=T), ]
-        write.csv(a, "lasso_coefficients.csv")
+        write.csv(a, "Output/lasso_coefficients.csv")
     }
     yhat <- predict(lasso, newx=newx, s=best.lambda, type="response")
     return(list(yhat=yhat, lasso=lasso,best.lambda=best.lambda))
 }
 
+
+change_names <- function(charvec) {
+    out <- gsub("\\+", ", ", charvec)
+    out <- gsub("_patent", " (Patent)", out)
+    out <- gsub("_goog", " (Google)", out)
+    out <- gsub("peer_dev_jacc", "Word Overlap Atypicality", out)
+    out <- gsub("peer_dev_lda", "Style Matching Atypicality", out)
+    out <- gsub("min_", "Min ", out)
+    out <- gsub("max_", "Max ", out)
+    out <- gsub("avg_", "Avg ", out)
+    out <- gsub("cc", "Clustering Coefficient", out)
+    out <- gsub("jm", "Jaccard Index", out)
+    out <- gsub("nf", "Node Frequency", out)
+    out <- gsub("_coef_var", " Coefficient of Variation", out)
+    out <- gsub("ks", "Kolmogorov-Smirnov", out)
+    out <- gsub("burt", "Constraints Measure", out)
+    out <- gsub("degree", "Degree", out)
+    out <- gsub("short_prob", "Shortlist Probability", out)
+    out <- gsub("_orig", " (Original)", out)
+    return(out)
+}

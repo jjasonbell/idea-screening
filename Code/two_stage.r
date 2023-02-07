@@ -1,12 +1,13 @@
-source('lasso_fun.R')
-main_data_path <- "master_data.csv"
-vars <- c("wo_goog", "wc", "peer_dev_lda", "peer_dev_jacc", "ks", "min_nf")
+# Cross validation over contests 
+source('Code/lasso_fun.R')
+main_data_path <- "Data/example_two_stage_data.csv"
+vars <- c("wc", "peer_dev_lda", "peer_dev_jacc", "ks_goog")
 data_object <- data_make(input_file=main_data_path, 
-               varnames =vars, filter_on_X='impute', use_winner=T)
+         varnames =vars, filter_on_X='impute', use_winner = T)
 
 X <- data_object$X
 Xso <- X
-X = X[, c(5, 7)]
+X = X[, c(4, 5)]
 X_orig <- data_object$X_object
 idea_df <- data_object$idea_df
 contest <- idea_df$contest
@@ -24,7 +25,6 @@ for (i in 1:length(levels(contest))) {
     contest_i <- levels(contest)[i]
     train_ind <- contest != contest_i
     test_ind <- contest == contest_i
-    setwd(paste0(contest_i))
     df_so_i <- data.frame(y=shortlist[train_ind], Xso[train_ind,])
     so_i1 <- glm(y ~ peer_dev_lda, data=df_so_i, family="binomial")
     so_i2 <- glm(y ~ wc, data=df_so_i, family="binomial")
@@ -46,11 +46,10 @@ for (i in 1:length(levels(contest))) {
     lasso <- get_model(X[train_ind, ], X[test_ind,], 
         contest[train_ind], shortlist[train_ind],
         display=T, save_coefs=F, pen_vec=pen_vec, winner[train_ind])
-     oos_doomed <- c(oos_doomed, yhat_so_i)
-     oos_yhat <- c(oos_yhat, lasso$yhat)
-     oos_y_test <- c(oos_y_test, shortlist[test_ind])
-     oos_winner = c(oos_winner, winner[test_ind])
-    setwd('..')
+    oos_doomed <- c(oos_doomed, yhat_so_i)
+    oos_yhat <- c(oos_yhat, lasso$yhat)
+    oos_y_test <- c(oos_y_test, shortlist[test_ind])
+    oos_winner = c(oos_winner, winner[test_ind])
     cat('\n\n')
 }
 winner2 <- oos_winner[oos_doomed==0]
@@ -65,7 +64,6 @@ This is ", pct_garbage_dropped, "% of ideas.")
 
 oos_yhat = ifelse(oos_doomed == 1, 0, oos_yhat)
 cat("AUC: ", roc(oos_y_test, oos_yhat)$auc)
-setwd('../Output')
 results <- list(observed=oos_y_test, yhat=oos_yhat, X=X, X_orig=X_orig, idea_df=idea_df)
-res_path = paste0("../Output/twostage_res_", vars[1], "_", length(vars), ".RData")
+res_path = paste0("Output/twostage_res_", vars[1], "_", length(vars), ".RData")
 save(results, file=res_path)
